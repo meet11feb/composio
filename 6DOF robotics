@@ -1,0 +1,60 @@
+% Create a 6-DOF robotic arm using the Robotics System Toolbox
+% This is an example using the DH parameters for the Puma560 robot
+
+% Clear the workspace and command window
+clear;
+clc;
+
+% Create a rigid body tree for the robot
+robot = rigidBodyTree('DataFormat', 'row', 'MaxNumBodies', 6);
+
+% Define DH parameters for each joint
+dhparams = [0, 0.2435, 0.4318, pi/2;
+            pi/2, 0, 0.0203, 0;
+            0, 0.4318, 0, 0;
+            pi/2, 0, 0, pi/2;
+            -pi/2, 0, 0, -pi/2;
+            0, 0, 0, 0];
+
+% Add each body and joint to the robot using the DH parameters
+for i = 1:6
+    % Create a rigid body
+    body = rigidBody(['body', num2str(i)]);
+    
+    % Create a joint with a rotational motion (revolute joint)
+    joint = rigidBodyJoint(['joint', num2str(i)], 'revolute');
+    
+    % Set the joint transformation using DH parameters
+    setFixedTransform(joint, dhparams(i,:), 'dh');
+    
+    % Attach the joint to the body
+    body.Joint = joint;
+    
+    % Add the body to the robot
+    if i == 1
+        addBody(robot, body, 'base'); % Attach first body to base
+    else
+        addBody(robot, body, ['body', num2str(i - 1)]); % Attach subsequent bodies
+    end
+end
+
+% Display the robot structure
+showdetails(robot);
+
+% Define joint angles (in radians) for testing
+q = [0, pi/4, pi/3, pi/6, pi/3, pi/4];
+
+% Show the robot in its initial configuration
+figure;
+show(robot, q);
+
+% Animation parameters
+frames = 100;
+jointAngles = linspace(0, pi, frames);
+
+% Perform a simple animation
+for i = 1:frames
+    q = [jointAngles(i), pi/4, jointAngles(i)/2, pi/6, jointAngles(i)/3, pi/4];
+    show(robot, q, 'PreservePlot', false);
+    pause(0.1);
+end
